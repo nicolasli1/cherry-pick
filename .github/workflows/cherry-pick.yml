@@ -1,0 +1,50 @@
+name: Cherry-Pick Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: 'Branch de origen (donde están los commits)'
+        required: true
+        default: 'uat'
+      target_branch:
+        description: 'Branch de destino (donde se aplicará el cherry-pick)'
+        required: true
+        default: 'master'
+      commit_sha:
+        description: 'SHA del commit a cherry-pickear'
+        required: true
+
+jobs:
+  cherry-pick:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Asegúrate de traer todos los commits para cherry-pick
+
+    - name: Configurar usuario para Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Crear y actualizar las ramas
+      run: |
+        git fetch origin ${{ github.event.inputs.source_branch }}:${{ github.event.inputs.source_branch }}
+        git fetch origin ${{ github.event.inputs.target_branch }}:${{ github.event.inputs.target_branch }}
+        git checkout ${{ github.event.inputs.target_branch }}
+
+    - name: Cherry-pick commit
+      run: |
+        git cherry-pick ${{ github.event.inputs.commit_sha }}
+        git push origin ${{ github.event.inputs.target_branch }}
+
+    - name: Notificar éxito
+      if: ${{ success() }}
+      run: echo "Cherry-pick realizado correctamente."
+
+    - name: Notificar fallo
+      if: ${{ failure() }}
+      run: echo "El cherry-pick falló. Por favor, revisa los conflictos manualmente."
