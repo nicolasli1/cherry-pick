@@ -15,6 +15,9 @@ on:
         description: 'SHA del commit a cherry-pickear'
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   cherry-pick:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0 # Traer todos los commits y referencias
+        fetch-depth: 0
 
     - name: Configurar usuario para Git
       run: |
